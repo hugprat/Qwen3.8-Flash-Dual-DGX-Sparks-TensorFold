@@ -66,6 +66,12 @@ third-party notices that go with it (TensorFold's MIT and Apache-2.0 notices, Zi
   [GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold)
   (the link and rail detection, the NCCL settings, the image and checkpoint setup, the checks), developed with
   [Claude Code](https://claude.com/claude-code), under the Apache License 2.0.
+- **Fixes to the engine patches.** `patches/0010` (the prompt cache's eviction inside a pass,
+  [#9](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/9)) and `patches/0011` (the ranks'
+  prefill admission,
+  [#6](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/6)) were written by Drake Lu
+  ([xinlu8439](https://github.com/xinlu8439)), with their regression tests, in those issues; jeff-defuser
+  ([jeff-defuser](https://github.com/jeff-defuser)) confirmed `0010` on a second setup.
 
 ## Runtime stack
 

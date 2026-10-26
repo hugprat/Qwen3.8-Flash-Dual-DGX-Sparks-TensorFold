@@ -264,6 +264,15 @@ what a rank of the chosen `CONTEXT` holds under a prompt that fills it, measured
 turns the stop into a warning). A prompt's prefill holds extra memory while it runs (about 31 GiB a rank for a million
 tokens, freed after). `CONTEXT=262144` serves the native window without YaRN and needs less.
 
+**Other work on a Spark while serving.** The KV pool is sized at load from the `MemAvailable` of that moment. If another
+process takes memory later (a speech-to-text job, say) and leaves less than the reserve, a growth step is refused on both
+ranks to protect the machine, and a prefill that meets it ends in `NoRoom`; on this build that takes both ranks down (exit
+code 3, `a prompt's prefill failed after the ranks agreed (NoRoom)` in the log, [#7](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/7))
+instead of failing the one request. Keep `TENSORFOLD_MEMORY_RESERVE_GIB` above what the other work takes at its peak (one
+setup that shares a Spark with a 9 GiB job runs at 14; the pool shrinks by the same amount), or keep that work off the
+Sparks. `./stop.sh && ./start.sh` brings both ranks back; `docker update --restart=on-failure qwen38-fn-tf` on each Spark
+lets Docker do it (this recipe does not set that up, and has not tested it).
+
 ## KV cache: FP8 by default
 
 `KV_DTYPE=fp8` (the default, `--kv-dtype fp8`) stores each cached key and value in FP8 with a scale. It is **lossy**:
@@ -458,7 +467,9 @@ NOTICE        third-party notices (TensorFold's MIT and Apache-2.0 notices, Zig,
 ```
 
 `patches/` holds the Zig engine's Flash Next port (`0001`-`0009`: build and server flags, the CUDA kernels, config
-and weights, the Triton replay, the engine, two ranks, serving, the kernel spec, TensorFold's Python vision helper), applied to TensorFold's source in
+and weights, the Triton replay, the engine, two ranks, serving, the kernel spec, TensorFold's Python vision helper) and its
+fixes (`0010`-`0012`: the prompt cache's eviction inside a pass, the ranks' prefill admission, the control link's record
+order), applied to TensorFold's source in
 filename order by `prepare.sh` (`git apply` in the checkout's root); the kernel set is compiled in the image build.
 
 ## License

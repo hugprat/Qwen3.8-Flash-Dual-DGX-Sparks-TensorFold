@@ -3,8 +3,28 @@
 Every change to this recipe, newest first. Each release names the image it serves: `scripts/prepare.sh` pulls
 `ghcr.io/miaai-lab/qwen3.8-flash-dual-dgx-sparks-tensorfold` by the digest pinned in `scripts/config.sh`.
 
-## Unreleased (2026-10-11)
+## Unreleased
 
+Patches `0010`-`0012` change the engine, so the image hash changes: setup builds the image locally until one is
+published for these patches (the v1.1 digest in `scripts/config.sh` does not apply).
+
+### Fixed
+- **A segfault in `endPass` under a full prompt cache, and a state rank 1 kept that rank 0 had freed**
+  ([#9](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/9), `0010`): the store could evict a
+  state the same pass had just kept while the pass still pointed at it. The fix and its regression test are by Drake Lu
+  ([xinlu8439](https://github.com/xinlu8439)), who reported and diagnosed it; jeff-defuser
+  ([jeff-defuser](https://github.com/jeff-defuser)) confirmed it on a second setup.
+- **Both ranks exiting after one rank refused a prefill the other admitted**
+  ([#6](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/6), `0011`): a rank that refused with
+  `NoRoom` left the other in a collective it never joined until `TF_TP_TIMEOUT_S`. The ranks now agree on admission before
+  either makes its sequence. The patch and its regression test are by Drake Lu
+  ([xinlu8439](https://github.com/xinlu8439)).
+- **A long prompt that deadlocked the control link**
+  ([#3](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/3), `0012`): rank 0 wrote a batch that
+  did not fit a record to the link before the record that wakes rank 1, so a batch larger than the socket buffers (a prompt
+  of several hundred thousand tokens) blocked until the deadline took both ranks down. The record goes first now.
+
+### Reverted (2026-10-11)
 - Reverted the context-admission change in
   [PR #2](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/pull/2), including its
   integrated lane regression and `tools/context_boundary.py`. Admission again counts speculative workspace
