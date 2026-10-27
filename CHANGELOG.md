@@ -5,7 +5,7 @@ Every change to this recipe, newest first. Each release names the image it serve
 
 ## Unreleased
 
-Patches `0010`-`0012` change the engine, so the image hash changes: setup builds the image locally until one is
+Patches `0010`-`0013` change the engine, so the image hash changes: setup builds the image locally until one is
 published for these patches (the v1.1 digest in `scripts/config.sh` does not apply).
 
 ### Fixed
@@ -23,6 +23,12 @@ published for these patches (the v1.1 digest in `scripts/config.sh` does not app
   ([#3](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/issues/3), `0012`): rank 0 wrote a batch that
   did not fit a record to the link before the record that wakes rank 1, so a batch larger than the socket buffers (a prompt
   of several hundred thousand tokens) blocked until the deadline took both ranks down. The record goes first now.
+
+### Added
+- **Image and video prompts resume** (`0013`): a picture is part of the cache key, each of its rows mixed with a
+  hash of its features, so the same pixels resume and a different picture does not. A prompt whose features cannot
+  be keyed is neither looked up nor kept. The patch's host test checks those keyed rows.
+  `tools/image_prompt_reuse.py` checks the resumed share and that a resumed reply equals a fresh prefill.
 
 ### Reverted (2026-10-11)
 - Reverted the context-admission change in
