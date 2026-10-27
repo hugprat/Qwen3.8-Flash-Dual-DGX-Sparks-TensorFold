@@ -29,6 +29,10 @@ published for these patches (the v1.1 digest in `scripts/config.sh` does not app
   hash of its features, so the same pixels resume and a different picture does not. A prompt whose features cannot
   be keyed is neither looked up nor kept. The patch's host test checks those keyed rows.
   `tools/image_prompt_reuse.py` checks the resumed share and that a resumed reply equals a fresh prefill.
+  Checked on two DGX Sparks, NVFP4 `fc694b54`, image built locally from current main plus `0013` (2026-10-27):
+  `python3 tools/image_prompt_reuse.py 12k 3` passed. Same-picture prompts resumed at least 98.9%; the identical
+  second send resumed 99.9% and its reply matched the fresh prefill (text `02bac8dbc518`, token sha `0c713dcdfb98`).
+  A different picture resumed 0%. Prefill went from 4.31 s to 0.06 s.
 
 ### Reverted (2026-10-11)
 - Reverted the context-admission change in
